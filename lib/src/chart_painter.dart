@@ -16,6 +16,8 @@ class PieChartPainter extends CustomPainter {
   final bool? showValuesInPercentage;
   final bool showChartValues;
   final bool showChartValuesOutside;
+  final double? chartValueDistance;
+  final List<Color> colorList;
   final int? decimalPlaces;
   final bool? showChartValueLabel;
   final ChartType? chartType;
@@ -28,6 +30,7 @@ class PieChartPainter extends CustomPainter {
   final List<Color>? emptyColorGradient;
   final DegreeOptions degreeOptions;
   final Color baseChartColor;
+  final double? verticalOffset;
   final double? totalValue;
 
   late double _prevAngle;
@@ -38,7 +41,8 @@ class PieChartPainter extends CustomPainter {
     double angleFactor,
     this.showChartValues,
     this.showChartValuesOutside,
-    List<Color> colorList, {
+    this.colorList, {
+    this.chartValueDistance,
     this.chartValueStyle,
     this.chartValueBackgroundColor,
     required List<double> values,
@@ -56,6 +60,7 @@ class PieChartPainter extends CustomPainter {
     this.emptyColorGradient,
     this.degreeOptions = const DegreeOptions(),
     required this.baseChartColor,
+    this.verticalOffset,
     this.totalValue,
   }) {
     // set total value
@@ -89,6 +94,8 @@ class PieChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    _prevAngle = degreeToRadian(degreeOptions.initialAngle);
+
     final side = math.min(size.width, size.height);
 
     // if it is a full circle, then we set the left to 0 and it works just fine, however,
@@ -100,7 +107,7 @@ class PieChartPainter extends CustomPainter {
 
     final left = degreeOptions.initialAngle >= -90 && degreeOptions.totalDegrees <= 180 ? -size.width / 2 : 0.0;
 
-    const top = 0.0;
+    double top = verticalOffset ?? 0.0;
 
     final Rect boundingSquare = Rect.fromLTWH(left, top, side, size.height);
 
@@ -169,10 +176,12 @@ class PieChartPainter extends CustomPainter {
           );
         }
 
-        final radius = showChartValuesOutside ? (side / 2) + 16 : side / 3;
+        final radius = showChartValuesOutside
+            ? (side / 2) + (chartValueDistance ?? 16)
+            : side / 3;
         final radians = _prevAngle + (((_totalAngle / _total) * _subParts[i]) / 2);
         final x = (radius) * math.cos(radians);
-        final y = (radius) * math.sin(radians);
+        final y = (radius) * math.sin(radians) + top;
 
         if (_subParts.elementAt(i) > 0) {
           final value = formatChartValues != null
@@ -185,7 +194,14 @@ class PieChartPainter extends CustomPainter {
                     ? ('${formatChartValues!((_subParts.elementAt(i) / _total) * 100)}%')
                     : ('${((_subParts.elementAt(i) / _total) * 100).toStringAsFixed(decimalPlaces!)}%')
                 : value;
-            _drawName(canvas, name, x, y, side);
+            _drawName(
+              canvas,
+              name,
+              x,
+              y,
+              side,
+              color: getColor(colorList, i),
+            );
           }
         }
         _prevAngle = _prevAngle + (((_totalAngle) / _total) * _subParts[i]);
@@ -198,7 +214,14 @@ class PieChartPainter extends CustomPainter {
   }
 
   void _drawCenterText(Canvas canvas, double side) {
-    _drawName(canvas, centerText, 0, 0, side, style: centerTextStyle);
+    _drawName(
+      canvas,
+      centerText,
+      0,
+      0 + (verticalOffset ?? 0),
+      side,
+      style: centerTextStyle,
+    );
   }
 
   void _drawName(
@@ -208,9 +231,10 @@ class PieChartPainter extends CustomPainter {
     double y,
     double side, {
     TextStyle? style,
+    Color? color,
   }) {
     final span = TextSpan(
-      style: style ?? chartValueStyle,
+      style: (style ?? chartValueStyle)?.copyWith(color: color),
       text: name,
     );
     TextPainter tp = TextPainter(
@@ -224,13 +248,19 @@ class PieChartPainter extends CustomPainter {
       //Draw text background box
       final rect = Rect.fromCenter(
         center: Offset((side / 2 + x), (side / 2 + y)),
-        width: tp.width + 6,
-        height: tp.height + 4,
+        width: tp.width + 14,
+        height: tp.height + 8,
       );
-      final rRect = RRect.fromRectAndRadius(rect, const Radius.circular(4));
+      final rRect = RRect.fromRectAndRadius(rect, const Radius.circular(10));
       final paint = Paint()
-        ..color = chartValueBackgroundColor ?? Colors.grey[200]!
+        ..color =
+            (chartValueBackgroundColor ?? color ?? Colors.grey).withOpacity(0.1)
         ..style = PaintingStyle.fill;
+      canvas.drawRRect(rRect, paint);
+
+      paint
+        ..color = chartValueBackgroundColor ?? color ?? Colors.grey
+        ..style = PaintingStyle.stroke;
       canvas.drawRRect(rRect, paint);
     }
     //Finally paint the text above box

@@ -25,6 +25,7 @@ class PieChart extends StatefulWidget {
     this.ringStrokeWidth = 20.0,
     this.legendOptions = const LegendOptions(),
     this.chartValuesOptions = const ChartValuesOptions(),
+    this.chartValueDistance,
     this.emptyColor = Colors.grey,
     this.gradientList,
     this.emptyColorGradient = const [Colors.black26, Colors.black54],
@@ -32,6 +33,7 @@ class PieChart extends StatefulWidget {
     Key? key,
     this.degreeOptions = const DegreeOptions(),
     this.baseChartColor = Colors.transparent,
+    this.verticalOffset,
     this.totalValue,
   }) : super(key: key);
 
@@ -52,11 +54,13 @@ class PieChart extends StatefulWidget {
   final double ringStrokeWidth;
   final LegendOptions legendOptions;
   final ChartValuesOptions chartValuesOptions;
+  final double? chartValueDistance;
   final Color emptyColor;
   final List<Color> emptyColorGradient;
   final DegreeOptions degreeOptions;
   final Map<String, String> legendLabels;
   final Color baseChartColor;
+  final double? verticalOffset;
   final double? totalValue;
 
   @override
@@ -134,6 +138,7 @@ class _PieChartState extends State<PieChart>
                     widget.chartValuesOptions.showChartValues,
                     widget.chartValuesOptions.showChartValuesOutside,
                     widget.colorList,
+                    chartValueDistance: widget.chartValueDistance,
                     chartValueStyle: widget.chartValuesOptions.chartValueStyle,
                     chartValueBackgroundColor:
                         widget.chartValuesOptions.chartValueBackgroundColor,
@@ -159,6 +164,7 @@ class _PieChartState extends State<PieChart>
                       initialAngle: widget.initialAngleInDegree,
                     ),
                     baseChartColor: widget.baseChartColor,
+                    verticalOffset: widget.verticalOffset,
                     totalValue: widget.totalValue),
                 child: const AspectRatio(aspectRatio: 1),
               ),
