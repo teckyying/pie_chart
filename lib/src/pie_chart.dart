@@ -35,6 +35,7 @@ class PieChart extends StatefulWidget {
     this.baseChartColor = Colors.transparent,
     this.verticalOffset,
     this.totalValue,
+    this.legendWidget,
   }) : super(key: key);
 
   final Map<String, double> dataMap;
@@ -62,6 +63,7 @@ class PieChart extends StatefulWidget {
   final Color baseChartColor;
   final double? verticalOffset;
   final double? totalValue;
+  final Widget? legendWidget;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -243,6 +245,10 @@ class _PieChartState extends State<PieChart>
   }
 
   _getLegend({EdgeInsets? padding}) {
+    if (widget.legendWidget != null) {
+      return widget.legendWidget;
+    }
+
     if (widget.legendOptions.showLegends) {
       final isGradientPresent = widget.gradientList?.isNotEmpty ?? false;
       final isNonGradientElementPresent =
